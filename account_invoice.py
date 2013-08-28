@@ -30,10 +30,70 @@ class account_invoice(osv.osv):
     _name = "account.invoice"
     _inherit = "account.invoice"
 
-    def action_move_create(self, cr, uid, ids, context=None):
-	import pdb;pdb.set_trace()
-	res = super(account_invoice,self).action_move_create(cr,uid,ids,context)
-	return res
+    def action_move_report_sales(self, cr, uid, ids, context=None):
+	""" Creates VAT sales report lines """
+	invoice_ids = self.search(cr,uid,[('id','=',ids[0])])
+	for invoice in self.browse(cr,uid,invoice_ids):
+		tax_ids = self.pool.get('account.invoice.tax').search(cr,uid,[('invoice_id','=',invoice.id)])
+		import pdb;pdb.set_trace()
+		for tax_line in self.pool.get('account.invoice.tax').browse(cr,uid,tax_ids):	
+			vals_create = {
+				'invoice_date': invoice.date_invoice,
+				'journal_id': invoice.journal_id.id,
+				'partner_id': invoice.partner_id.id,
+				'vat': invoice.partner_id.vat,
+				'iibb': invoice.partner_id.iibb,
+				'net_amount': invoice.amount_untaxed,
+				'amount_total': invoice.amount_total,
+				'name': tax_line.name,
+				'active': True
+				}
+			if invoice.partner_id.responsability_id.id == 1:
+				# Consumidor Final
+				vals_create['amount_vat_end_consumer'] = tax_line.tax_amount
+			else:
+				vals_create['amount_vat_end_consumer'] = 0
+			if invoice.partner_id.responsability_id.id == 5:
+				# No responsable	
+				vals_create['amount_vat_not_responsible'] = tax_line.tax_amount
+			else:
+				vals_create['amount_vat_responsible'] = 0
+			if invoice.partner_id.responsability_id.id == 3:
+				# Responsable inscripto
+				vals_create['amount_vat_responsible'] = tax_line.tax_amount
+			else:
+				vals_create['amount_vat_responsible'] = 0
+			
+			report_sales_id = self.pool.get('account.invoice.report_vat').create(cr,uid,vals_create)
+		# TODO check error on report_sales_id	
+	return None
 
 account_invoice()
 
+class account_invoice_report_vat(osv.osv):
+    """ Account Invoice """
+    _name = "account.invoice.report_vat"
+    _description = "VAT Report line"
+
+    _columns = {
+	'name': fields.char('Name'),
+	'invoice_date': fields.date('Invoice date'),
+	'journal_id': fields.many2one('account.journal'),
+	'partner_id': fields.many2one('res.partner','Partner'),
+	'vat': fields.char('VAT'),
+	'iibb': fields.char('IIBB'),
+	'net_amount': fields.float('Net invoice amount'),
+	'tax_description': fields.char('Tax Description'),
+	'amount_vat_responsible': fields.float('VAT Responsible Amount'),
+	'amount_vat_not_responsible': fields.float('VAT Not Responsible Amount'),
+	'amount_vat_end_consumer': fields.float('VAT End Consumer Amount'),
+	'amount_total': fields.float('Total Amount'),
+	'invoice_id': fields.many2one('account.invoice','Invoice'),
+        'active': fields.boolean('Active', help="If the active field is set to False, it will allow you to hide the vat report line without removing it."),
+	}
+
+    _default = {
+	'active': 1
+	}
+
+account_invoice_report_vat()
