@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data noupdate="True">
+        <record model='ir.config_parameter' id='report_directory'>
+            <field name='key'>download_directory</field>
+            <field name='value'>/home/gustavo/work/greenlite</field>
+        </record>
+    </data>
+</openerp>
+
