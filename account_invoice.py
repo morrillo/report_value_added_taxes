@@ -39,13 +39,14 @@ class account_invoice(osv.osv):
 		for tax_line in self.pool.get('account.invoice.tax').browse(cr,uid,tax_ids):	
 			vals_create = {
 				'invoice_date': invoice.date_invoice,
-				'journal_id': invoice.journal_id.id,
-				'partner_id': invoice.partner_id.id,
+				'journal_name': invoice.journal_id.name,
+				'partner_name': invoice.partner_id.name,
 				'vat': invoice.partner_id.vat,
 				'iibb': invoice.partner_id.iibb,
 				'net_amount': invoice.amount_untaxed,
 				'amount_total': invoice.amount_total,
 				'name': tax_line.name,
+				'type': invoice.type,
 				'active': True
 				}
 			if invoice.partner_id.responsability_id.id == 1:
@@ -78,8 +79,8 @@ class account_invoice_report_vat(osv.osv):
     _columns = {
 	'name': fields.char('Name'),
 	'invoice_date': fields.date('Invoice date'),
-	'journal_id': fields.many2one('account.journal'),
-	'partner_id': fields.many2one('res.partner','Partner'),
+	'journal_name': fields.char('Journal Name'),
+	'partner_name': fields.char('Partner Name'),
 	'vat': fields.char('VAT'),
 	'iibb': fields.char('IIBB'),
 	'net_amount': fields.float('Net invoice amount'),
@@ -89,6 +90,7 @@ class account_invoice_report_vat(osv.osv):
 	'amount_vat_end_consumer': fields.float('VAT End Consumer Amount'),
 	'amount_total': fields.float('Total Amount'),
 	'invoice_id': fields.many2one('account.invoice','Invoice'),
+	'type': fields.char('Invoice Type'),
         'active': fields.boolean('Active', help="If the active field is set to False, it will allow you to hide the vat report line without removing it."),
 	}
 
