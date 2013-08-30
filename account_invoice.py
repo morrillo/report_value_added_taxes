@@ -91,9 +91,10 @@ class account_invoice_report_vat(osv.osv):
 		directory = directory + '/'
 
 	ofile  = open(directory+'report.csv', "wb")
-	writer = csv.writer(ofile, delimiter='\t', quotechar='"', quoting=csv.QUOTE_ALL)
+	writer = csv.writer(ofile)
 
 	vat_report_line_ids = self.pool.get('account.invoice.report_vat').search(cr,uid,[('active','=',True)])
+	rows = [['Invoice Type,Invoice Date,Journal Name,Invoice Name,Partner Name,VAT,IIBB,Net Amount,Tax Description,Amount VAT Responsible,Amount VAT Not Responsible,VAT End Consumer,Total Amount']]
 	for vat_report_line in self.pool.get('account.invoice.report_vat').browse(cr,uid,vat_report_line_ids):
 		row = []
 		partner_name = unicode(vat_report_line.name)
@@ -113,7 +114,8 @@ class account_invoice_report_vat(osv.osv):
 		row.append(str(vat_report_line.amount_vat_not_responsible))
 		row.append(str(vat_report_line.amount_vat_end_consumer))
 		row.append(str(vat_report_line.amount_total))
-    		writer.writerow(','.join(row))
+		rows.append(row)
+    	writer.writerows(rows)
 
 	ofile.close()
 
