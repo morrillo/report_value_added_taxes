@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data noupdate="True">
+        <record model='ir.cron' id='update_download_vat_report'>
+            <field name='name'>Download VAT Report</field>
+            <field name='active'>True</field>
+            <field name='priority'>5</field>
+            <field name='interval_number'>1</field>
+            <field name='number_call'>-1</field>
+            <field name='interval_type'>minutes</field>
+            <field name='model'>account.invoice.report_vat</field>
+            <field name='function'>download_vat_report_file</field>
+            <field name='args'>()</field>
+        </record>
+    </data>
+</openerp>
+

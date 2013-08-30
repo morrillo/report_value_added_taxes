@@ -29,7 +29,7 @@
     'images': [],
     'depends': ['account'],
     'demo': [],
-    'data': ['ir_config_parameter.xml'],
+    'data': ['ir_config_parameter.xml','ir_cron.xml'],
     'test': [],
     'installable': True,
 }

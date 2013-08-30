@@ -35,11 +35,11 @@ class account_invoice(osv.osv):
 	invoice_ids = self.search(cr,uid,[('id','=',ids[0])])
 	for invoice in self.browse(cr,uid,invoice_ids):
 		tax_ids = self.pool.get('account.invoice.tax').search(cr,uid,[('invoice_id','=',invoice.id)])
-		import pdb;pdb.set_trace()
 		for tax_line in self.pool.get('account.invoice.tax').browse(cr,uid,tax_ids):	
 			vals_create = {
 				'invoice_date': invoice.date_invoice,
 				'journal_name': invoice.journal_id.name,
+				'invoice_name': invoice.number,
 				'partner_name': invoice.partner_id.name,
 				'period_code': invoice.period_id.code,
 				'vat': invoice.partner_id.vat,
@@ -77,8 +77,51 @@ class account_invoice_report_vat(osv.osv):
     _name = "account.invoice.report_vat"
     _description = "VAT Report line"
 
+    def download_vat_report_file(self,cr,uid,context=None):
+	""" creates file with VAT report """
+	import csv
+
+	download_directory_id = self.pool.get('ir.config_parameter').search(cr,uid,[('key','=','download_directory')])
+	if not download_directory_id:
+		logging.getLogger(__name__).info('VAT Report Line: No download directory present at ir.config_parameter')
+		return None
+	for parameter in self.pool.get('ir.config_parameter').browse(cr,uid,download_directory_id):
+		directory = parameter.value
+	if directory[len(directory)-1:] <> '/':
+		directory = directory + '/'
+
+	ofile  = open(directory+'report.csv', "wb")
+	writer = csv.writer(ofile, delimiter='\t', quotechar='"', quoting=csv.QUOTE_ALL)
+
+	vat_report_line_ids = self.pool.get('account.invoice.report_vat').search(cr,uid,[('active','=',True)])
+	for vat_report_line in self.pool.get('account.invoice.report_vat').browse(cr,uid,vat_report_line_ids):
+		row = []
+		partner_name = unicode(vat_report_line.name)
+		row.append(str(vat_report_line.type))
+		row.append(str(vat_report_line.invoice_date))
+		row.append(str(vat_report_line.journal_name))
+		row.append(str(vat_report_line.invoice_name))
+		try:
+			row.append(partner_name)
+		except:
+			import pdb;pdb.set_trace()
+		row.append(str(vat_report_line.vat))
+		row.append(str(vat_report_line.iibb))
+		row.append(str(vat_report_line.net_amount))
+		row.append(str(vat_report_line.tax_description))
+		row.append(str(vat_report_line.amount_vat_responsible))
+		row.append(str(vat_report_line.amount_vat_not_responsible))
+		row.append(str(vat_report_line.amount_vat_end_consumer))
+		row.append(str(vat_report_line.amount_total))
+    		writer.writerow(','.join(row))
+
+	ofile.close()
+
+        return None	
+
     _columns = {
 	'name': fields.char('Name'),
+	'invoice_name': fields.char('Invoice Name'),
 	'invoice_date': fields.date('Invoice date'),
 	'journal_name': fields.char('Journal Name'),
 	'partner_name': fields.char('Partner Name'),
